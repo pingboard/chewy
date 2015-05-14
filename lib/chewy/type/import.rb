@@ -120,7 +120,12 @@ module Chewy
             existing_object = entry[:_id].present? && indexed_objects && indexed_objects[entry[:_id].to_s]
           end
 
+          if self.root_object.routing.to_h[:value]
+            entry[:_routing] = self.root_object.compose_routing(object)
+          end
+
           entry[:data] = object_data(object, crutches)
+
 
           if existing_object && entry[:parent].to_s != existing_object[:parent]
             [{ delete: entry.except(:data).merge(parent: existing_object[:parent]) }, { index: entry }]
