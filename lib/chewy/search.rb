@@ -10,7 +10,7 @@ module Chewy
         :boost_factor, :random_score, :field_value_factor, :decay, :aggregations,
         :suggest, :none, :strategy, :query, :filter, :post_filter, :boost_mode,
         :score_mode, :order, :reorder, :only, :types, :delete_all, :find, :total,
-        :total_count, :total_entries, to: :all
+        :total_count, :total_entries, :search_type, :search_options, to: :all
     end
 
     module ClassMethods

@@ -832,6 +832,15 @@ module Chewy
       chain { options.merge!(search_type: val) }
     end
 
+    # Sets <tt>search_options</tt> for request.
+    # Passes through options to [`Elasticsearch::API::Actions#search-instance_method`](rdoc-ref:Elasticsearch::API::Actions#search-instance_method)
+    #
+    #   scope = UsersIndex.search_options(routing: 1, search_type: 'count')
+    #
+    def search_options opts={}
+      chain { options.merge!(search_options: opts) }
+    end
+
     # Merges two queries.
     # Merges all the values in criteria with the same rules as values added manually.
     #
@@ -925,6 +934,7 @@ module Chewy
     def _request
       @_request ||= begin
         request = criteria.request_body
+        request.merge!(options[:search_options]) if options[:search_options]
         request.merge!(index: _indexes.map(&:index_name), type: _types.map(&:type_name))
         request.merge!(search_type: options[:search_type]) if options[:search_type]
         request
