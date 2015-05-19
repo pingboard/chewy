@@ -829,7 +829,7 @@ module Chewy
     #   max_age = scope.aggs['max_age']['value']
     #
     def search_type val
-      chain { options.merge!(search_type: val) }
+      chain { search_options(search_type: val) }
     end
 
     # Sets <tt>search_options</tt> for request.
@@ -936,7 +936,6 @@ module Chewy
         request = criteria.request_body
         request.merge!(options[:search_options]) if options[:search_options]
         request.merge!(index: _indexes.map(&:index_name), type: _types.map(&:type_name))
-        request.merge!(search_type: options[:search_type]) if options[:search_type]
         request
       end
     end

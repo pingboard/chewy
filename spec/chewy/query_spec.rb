@@ -6,7 +6,9 @@ describe Chewy::Query do
   before do
     stub_index(:products) do
       define_type :product do
-        field :name, :age
+        root routing_id: -> { 1 } do
+          field :name, :age
+        end
       end
       define_type :city
       define_type :country
@@ -425,7 +427,31 @@ describe Chewy::Query do
   end
 
   describe '#search_type' do
-    specify { expect(subject.search_type(:count).options).to include(search_type: :count) }
+    specify { expect(subject.search_type(:count).options).to include(search_options: { search_type: :count }) }
+  end
+
+  describe '#search_options' do
+    before { stub_model(:city) }
+    let(:cities) { 3.times.map { |i| City.create! id: i + 1, name: "name#{i}", rating: i } }
+    
+    context ":routing" do
+      before do
+        stub_index(:cities) do
+          define_type :city do
+            root routing: { required: true }, routing_id: -> { rating }  do
+              field :name
+              field :rating, type: 'integer'
+            end
+          end
+        end
+      end
+
+      before { CitiesIndex::City.import! cities }
+
+      specify { expect(CitiesIndex::City.search_options(routing: 1).first.rating).to eq(1) }
+    end
+
+    specify { expect(subject.search_options(routing: 1, search_type: :count).options).to include(search_options: { routing: 1, search_type: :count }) }
   end
 
   describe '#aggregations' do
@@ -456,7 +482,7 @@ describe Chewy::Query do
         end
       end
 
-      before { CitiesIndex::City.import! cities }
+      before { CitiesIndex::Town.import! cities }
 
       specify { expect(CitiesIndex.order(:rating).first).to be_a CitiesIndex::City }
       specify { expect(CitiesIndex.order(:rating).first.name).to eq('name0') }
@@ -475,6 +501,8 @@ describe Chewy::Query do
 
       specify { expect(CitiesIndex.order(:rating).first._explanation).to be_nil }
       specify { expect(CitiesIndex.order(:rating).explain.first._explanation).to be_present }
+
+      #specify { expect(TownsIndex.search_options(routing: 1).first.rating).to eq(1) }
     end
 
     context 'sourceless' do
