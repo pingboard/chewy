@@ -914,6 +914,16 @@ module Chewy
       _response['timed_out']
     end
 
+    # Expose the raw response
+    def response
+      _response
+    end
+
+    # Expose the raw request
+    def request
+      _request
+    end
+
   protected
 
     def initialize_clone other
