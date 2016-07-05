@@ -28,9 +28,19 @@ module Chewy
             adapter.import(*args, import_options) do |action_objects|
               indexed_objects = self.root_object.parent_id && fetch_indexed_objects(action_objects.values.flatten)
               body = bulk_body(action_objects, indexed_objects)
-
-              errors = bulk(bulk_options.merge(body: body)) if body.any?
-
+              max_tries = 5
+              tries = 0
+              begin
+                tries += 1
+                errors = bulk(bulk_options.merge(body: body)) if body.any?
+              rescue Elasticsearch::Transport::Transport::ServerError => e
+                if tries <= max_tries
+                  sleep(0.2 * tries)
+                  retry
+                else
+                  raise
+                end
+              end
               fill_payload_import payload, action_objects
               fill_payload_errors payload, errors if errors.present?
               !errors.present?
