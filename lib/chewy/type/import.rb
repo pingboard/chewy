@@ -19,6 +19,7 @@ module Chewy
         #
         def import *args
           import_options = args.extract_options!
+          noisy = import_options.delete(:noisy)
           bulk_options = import_options.reject { |k, v| ![:refresh, :suffix].include?(k) }.reverse_merge!(refresh: true)
 
           index.create!(bulk_options.slice(:suffix)) unless index.exists?
@@ -43,6 +44,9 @@ module Chewy
               end
               fill_payload_import payload, action_objects
               fill_payload_errors payload, errors if errors.present?
+              if noisy && errors.present?
+                raise Chewy::ImportFailed.new(self, errors)
+              end
               !errors.present?
             end
           end
@@ -62,13 +66,9 @@ module Chewy
         # See adapters documentation for more details.
         #
         def import! *args
-          errors = nil
-          subscriber = ActiveSupport::Notifications.subscribe('import_objects.chewy') do |*args|
-            errors = args.last[:errors]
-          end
-          import *args
-          ActiveSupport::Notifications.unsubscribe(subscriber)
-          raise Chewy::ImportFailed.new(self, errors) if errors.present?
+          import_options = args.extract_options!
+          import_options[:noisy] = true
+          import *args, import_options
           true
         end
 
