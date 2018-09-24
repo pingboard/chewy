@@ -1064,13 +1064,8 @@ module Chewy
     def _request
       @_request ||= begin
         request = criteria.request_body
-<<<<<<< HEAD
         request[:index] = _indexes_hash.keys
         request[:type] = _types.map(&:type_name)
-=======
-        request.merge!(options[:search_options]) if options[:search_options]
-        request.merge!(index: _indexes.map(&:index_name), type: _types.map(&:type_name))
->>>>>>> develop
         request
       end
     end
