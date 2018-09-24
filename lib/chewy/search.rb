@@ -35,6 +35,15 @@ module Chewy
   module Search
     extend ActiveSupport::Concern
 
+    included do
+      singleton_class.delegate :explain, :query_mode, :filter_mode, :post_filter_mode,
+        :timeout, :limit, :offset, :highlight, :min_score, :rescore, :facets, :script_score,
+        :boost_factor, :random_score, :field_value_factor, :decay, :aggregations,
+        :suggest, :none, :strategy, :query, :filter, :post_filter, :boost_mode,
+        :score_mode, :order, :reorder, :only, :types, :delete_all, :find, :total,
+        :total_count, :total_entries, :search_type, :search_options, to: :all
+    end
+
     module ClassMethods
       # This is the entry point for the request composition, however,
       # most of the {Chewy::Search::Request} methods are delegated

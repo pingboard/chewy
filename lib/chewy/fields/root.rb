@@ -5,6 +5,8 @@ module Chewy
       attr_reader :id
       attr_reader :parent
       attr_reader :parent_id
+      attr_reader :routing
+      attr_reader :routing_id
 
       def initialize(*args)
         super(*args)
@@ -12,6 +14,8 @@ module Chewy
         @id = @options.delete(:id) || options.delete(:_id)
         @parent = @options.delete(:parent) || options.delete(:_parent)
         @parent_id = @options.delete(:parent_id)
+        @routing = @options.delete(:routing) || options.delete(:_routing) || {}
+        @routing_id = @options.delete(:routing_id) || @routing.delete(:value)
         @value ||= -> { self }
         @dynamic_templates = []
         @options.delete(:type)
@@ -26,7 +30,8 @@ module Chewy
           mappings[name][:dynamic_templates].concat dynamic_templates
         end
 
-        mappings[name][:_parent] = parent.is_a?(Hash) ? parent : {type: parent} if parent
+        mappings[name][:_parent] = parent.is_a?(Hash) ? parent : { type: parent } if parent
+        mappings[name][:_routing] = routing if !routing.empty?
         mappings
       end
 
@@ -54,6 +59,11 @@ module Chewy
       def compose_parent(object)
         return unless parent_id
         parent_id.arity.zero? ? object.instance_exec(&parent_id) : parent_id.call(object)
+      end
+
+      def compose_routing(object)
+        return unless routing_id
+        key = routing_id.arity.zero? ? object.instance_exec(&routing_id) : routing_id.call(object)
       end
 
       def compose_id(object)

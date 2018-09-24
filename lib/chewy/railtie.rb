@@ -31,6 +31,12 @@ module Chewy
         Chewy.strategy(:bypass) { migrate_without_chewy(*args) }
       end
     end
+    
+    module Rails5MigrationStrategy
+      def migrate(*args)
+        Chewy.strategy(:bypass) { super }
+      end
+    end
 
     module Rails5MigrationStrategy
       def migrate(*args)

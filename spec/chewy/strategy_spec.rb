@@ -69,7 +69,7 @@ describe Chewy::Strategy do
       end
 
       specify do
-        expect(CitiesIndex::City).to receive(:import!).with([city.id, other_city.id]).once
+        expect(CitiesIndex::City).to receive(:import!).with([city.id, other_city.id], {:noisy=>true}).once
         Chewy.strategy(:atomic) { [city, other_city].map(&:save!) }
       end
     end
@@ -83,7 +83,7 @@ describe Chewy::Strategy do
       end
 
       specify do
-        expect(CitiesIndex::City).to receive(:import!).with([city.id, other_city.id]).once
+        expect(CitiesIndex::City).to receive(:import!).with([city.id, other_city.id], {:noisy=>true}).once
         Chewy.strategy(:atomic) { [city, other_city].map(&:save!) }
       end
 

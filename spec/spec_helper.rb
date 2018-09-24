@@ -1,4 +1,5 @@
 require 'bundler'
+require 'pry-remote'
 
 Bundler.require
 
@@ -22,7 +23,7 @@ require 'support/class_helpers'
 require 'chewy/rspec'
 
 Chewy.settings = {
-  host: 'localhost:9250',
+  host: 'localhost:9200',
   wait_for_status: 'green',
   index: {
     number_of_shards: 1,

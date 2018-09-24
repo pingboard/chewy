@@ -7,7 +7,9 @@ describe Chewy::Query do
     before do
       stub_index(:products) do
         define_type :product do
-          field :name, :age
+          root routing_id: -> { 1 } do
+            field :name, :age
+          end
         end
         define_type :city
         define_type :country

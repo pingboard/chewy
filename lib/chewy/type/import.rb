@@ -39,6 +39,7 @@ module Chewy
         # It handles parent-child relationships: if the object parent_id has been
         # changed it destroys the object and recreates it from scratch.
         #
+<<<<<<< HEAD
         # Performs journaling if enabled: it stores all the ids of the imported
         # objects to a specialized index. It is possible to replay particular import
         # later to restore the data consistency.
@@ -74,6 +75,41 @@ module Chewy
         # @return [true, false] false in case of errors
         def import(*args)
           import_routine(*args).blank?
+=======
+        def import *args
+          import_options = args.extract_options!
+          noisy = import_options.delete(:noisy)
+          bulk_options = import_options.reject { |k, v| ![:refresh, :suffix].include?(k) }.reverse_merge!(refresh: true)
+
+          index.create!(bulk_options.slice(:suffix)) unless index.exists?
+          build_root unless self.root_object
+
+          ActiveSupport::Notifications.instrument 'import_objects.chewy', type: self do |payload|
+            adapter.import(*args, import_options) do |action_objects|
+              indexed_objects = self.root_object.parent_id && fetch_indexed_objects(action_objects.values.flatten)
+              body = bulk_body(action_objects, indexed_objects)
+              max_tries = 5
+              tries = 0
+              begin
+                tries += 1
+                errors = bulk(bulk_options.merge(body: body)) if body.any?
+              rescue Elasticsearch::Transport::Transport::ServerError => e
+                if tries <= max_tries
+                  sleep(0.2 * tries)
+                  retry
+                else
+                  raise
+                end
+              end
+              fill_payload_import payload, action_objects
+              fill_payload_errors payload, errors if errors.present?
+              if noisy && errors.present?
+                raise Chewy::ImportFailed.new(self, errors)
+              end
+              !errors.present?
+            end
+          end
+>>>>>>> develop
         end
 
         # @!method import!(*collection, **options)
@@ -86,6 +122,9 @@ module Chewy
         def import!(*args)
           errors = import_routine(*args)
           raise Chewy::ImportFailed.new(self, errors) if errors.present?
+          import_options = args.extract_options!
+          import_options[:noisy] = true
+          import *args, import_options
           true
         end
 
@@ -154,10 +193,18 @@ module Chewy
           ActiveSupport::Notifications.instrument 'import_objects.chewy', type: self do |payload|
             batches = adapter.import_references(*objects, routine.options.slice(:batch_size)).to_a
 
+<<<<<<< HEAD
             ::ActiveRecord::Base.connection.close if defined?(::ActiveRecord::Base)
             results = ::Parallel.map_with_index(batches, routine.parallel_options, &IMPORT_WORKER.curry[self, routine.options, batches.size])
             ::ActiveRecord::Base.connection.reconnect! if defined?(::ActiveRecord::Base)
             errors, import, leftovers = process_parallel_import_results(results)
+=======
+          if self.root_object.routing_id
+            entry[:_routing] = self.root_object.compose_routing(object)
+          end
+
+          entry[:data] = object_data(object, crutches)
+>>>>>>> develop
 
             if leftovers.present?
               batches = leftovers.each_slice(routine.options[:batch_size])
