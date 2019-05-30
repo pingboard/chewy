@@ -31,5 +31,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'pry-remote'
 
   spec.add_dependency 'activesupport', '>= 3.2'
-  spec.add_dependency 'elasticsearch', '~> 1.0.9'
+  spec.add_dependency 'elasticsearch', '~> 1.1.3'
 end
